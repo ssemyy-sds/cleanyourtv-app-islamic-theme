@@ -30,10 +30,10 @@ object PinnedLauncher {
     const val PACKAGE = "com.gathin.tvhome"
     const val VERSION_CODE = 4L
     const val VERSION_NAME = "2.3"
-    const val SIZE = 330_194L
-    const val SHA256 = "50ad97accea144f6b6f4fadee2cc4b74ac6d3ebde15a5c860842f759413c3c4b"
+    const val SIZE = 344_378L
+    const val SHA256 = "3a47b0a9117498bb1ed836bf39c0e531c2fc9c61cb8803313e4e92dafa9ee6ea"
     // SHA-256 of the signing certificate (DER), Android Debug key.
-    const val SIGNER_SHA256 = "0375b4d504271afc0de10ecf139fe3bc093db9d74b59a71bdb029faea7d4eec6"
+    const val SIGNER_SHA256 = "41848c8be4037794c68455235ee5e0ec514eb4d6bdbf0b630263ef4732df252e"
 }
 
 // The TV curtain bundled in the phone app (RFC-CURTAIN-1): module :tv:curtain of this repo, built

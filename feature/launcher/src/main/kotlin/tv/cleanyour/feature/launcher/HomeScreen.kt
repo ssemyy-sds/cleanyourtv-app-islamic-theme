@@ -174,6 +174,7 @@ private val themeDescriptions = mapOf(
     "default" to R.string.theme_default_desc,
     "aurora" to R.string.theme_aurora_desc,
     "six-columns" to R.string.theme_six_columns_desc,
+    "islamik" to R.string.theme_islamik_desc,
 )
 
 // A tap here applies the look to the TV, so the rows are guarded like a primary (R4-W8).

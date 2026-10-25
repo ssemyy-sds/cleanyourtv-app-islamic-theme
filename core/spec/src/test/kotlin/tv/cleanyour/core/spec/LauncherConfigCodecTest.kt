@@ -228,9 +228,9 @@ class LauncherConfigCodecTest {
     @Test fun bundledThemes() {
         val themes = BundledThemeSource().bundled()
         // dussehra (v2.4.0) is not bundled: its festival ends on 2026-10-21.
-        assertEquals(listOf("default", "aurora", "six-columns"), themes.map { it.id })
+        assertEquals(listOf("default", "aurora", "six-columns", "islamik"), themes.map { it.id })
         assertEquals(false, themes[0].doc.reducedMotion, "the bundled default is v2.4.0's")
-        assertEquals(listOf("Default", "Aurora", "Six columns"), themes.map { it.name })
+        assertEquals(listOf("Default", "Aurora", "Six columns", "Islamik"), themes.map { it.name })
         val aurora = themes[1]
         val wp = aurora.wallpaper!!
         val bytes = BundledThemeSource.bytes(wp)!!

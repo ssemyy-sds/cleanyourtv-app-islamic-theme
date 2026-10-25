@@ -140,6 +140,8 @@
     <string name="theme_aurora_desc">A deep blue background with a soft glow behind the apps.</string>
     <string name="theme_six_columns">Six columns</string>
     <string name="theme_six_columns_desc">Six apps across, so more fit on the screen.</string>
+    <string name="theme_islamik">Islamik</string>
+    <string name="theme_islamik_desc">Waktu solat JAKIM di bawah jam, azan, dan paparan masjid.</string>
     <string name="theme_card_cd">{name}. {description}</string>
     <string name="theme_card_selected_cd">{name}, selected. {description}</string>
 

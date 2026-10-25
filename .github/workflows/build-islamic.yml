@@ -1,0 +1,140 @@
+name: Build Clear TV Islamic
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: "Tipe build"
+        required: true
+        default: "debug"
+        type: choice
+        options:
+          - debug
+          - release_unsigned
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-islamic-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GRADLE_OPTS: -Dorg.gradle.daemon=false
+
+jobs:
+  build:
+    name: Build Launcher & Companion App
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout Companion App Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          persist-credentials: false
+
+      - name: Checkout Clear TV Islamic Repository
+        uses: actions/checkout@v4
+        with:
+          repository: Pokka99/cleartv-Islamic
+          path: external/cleartv-islamic
+          persist-credentials: false
+
+      - name: Setup JDK 17 & Android SDK (for Launcher)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: "platforms;android-34 build-tools;34.0.0"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build Adapted Islamic TV Launcher
+        working-directory: external/cleartv-islamic/launcher
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleRelease
+          
+          LAUNCHER_APK="app/build/outputs/apk/release/app-release.apk"
+          test -f "$LAUNCHER_APK" || { echo "Launcher APK build failed!"; exit 1; }
+          
+          SIZE=$(stat -c %s "$LAUNCHER_APK")
+          SHA256=$(sha256sum "$LAUNCHER_APK" | awk '{print $1}')
+          echo "Launcher APK size: $SIZE bytes"
+          echo "Launcher APK sha256: $SHA256"
+          
+          # Verify and extract signer digest
+          SIGNER_SHA256=$($ANDROID_HOME/build-tools/34.0.0/apksigner verify --verbose --print-certs "$LAUNCHER_APK" | grep -m1 "Signer #1 certificate SHA-256 digest:" | awk '{print $6}')
+          echo "Signer SHA256: $SIGNER_SHA256"
+          
+          # Store environment variables for companion app bundling
+          echo "LAUNCHER_APK_PATH=external/cleartv-islamic/launcher/$LAUNCHER_APK" >> $GITHUB_ENV
+          echo "LAUNCHER_SIZE=$SIZE" >> $GITHUB_ENV
+          echo "LAUNCHER_SHA256=$SHA256" >> $GITHUB_ENV
+          echo "LAUNCHER_SIGNER=$SIGNER_SHA256" >> $GITHUB_ENV
+
+      - name: Bundle Islamic Launcher into Companion App
+        run: |
+          mkdir -p android/platform/src/main/assets/bundled
+          cp "$LAUNCHER_APK_PATH" android/platform/src/main/assets/bundled/cleanyourtv-launcher.apk
+          
+          # Synchronize PinnedLauncher in core/trust/src/main/kotlin/tv/cleanyour/core/trust/Pins.kt
+          sed -i "s/const val SIZE = .*/const val SIZE = ${LAUNCHER_SIZE}L/" core/trust/src/main/kotlin/tv/cleanyour/core/trust/Pins.kt
+          sed -i "s/const val SHA256 = .*/const val SHA256 = \"${LAUNCHER_SHA256}\"/" core/trust/src/main/kotlin/tv/cleanyour/core/trust/Pins.kt
+          sed -i "s/const val SIGNER_SHA256 = .*/const val SIGNER_SHA256 = \"${LAUNCHER_SIGNER}\"/" core/trust/src/main/kotlin/tv/cleanyour/core/trust/Pins.kt
+          sed -i "s/const val VERSION_CODE = .*/const val VERSION_CODE = 4L/" core/trust/src/main/kotlin/tv/cleanyour/core/trust/Pins.kt
+          sed -i "s/const val VERSION_NAME = .*/const val VERSION_NAME = \"2.3\"/" core/trust/src/main/kotlin/tv/cleanyour/core/trust/Pins.kt
+
+      - name: Switch to JDK 21 (for Companion App)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Verify Pin and Module Rules
+        run: |
+          chmod +x gradlew
+          ./gradlew :core:trust:verifyLauncherPin :core:trust:verifyCurtainPin checkModuleGraph --console=plain
+
+      - name: Build Companion App APK
+        run: |
+          ./gradlew :app:assembleFullDebug --console=plain
+
+      - name: Collect Artifacts and Generate SHA-256 Checksums
+        run: |
+          mkdir -p dist/
+          cp android/platform/src/main/assets/bundled/cleanyourtv-launcher.apk dist/cleartv-islamic-launcher.apk
+          cp app/build/outputs/apk/full/debug/app-full-debug.apk dist/cleanyourtv-islamic-companion.apk
+          
+          cd dist/
+          sha256sum cleartv-islamic-launcher.apk > SHA256SUMS.txt
+          sha256sum cleanyourtv-islamic-companion.apk >> SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Upload APK Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cleanyourtv-islamic-apks
+          path: dist/
+          retention-days: 14
+
+      - name: Upload Test and Lint Reports (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-reports
+          path: |
+            **/build/reports/tests/
+            **/build/reports/lint-results-*.html
+          retention-days: 7

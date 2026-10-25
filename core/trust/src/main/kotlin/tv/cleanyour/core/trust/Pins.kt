@@ -26,14 +26,14 @@ object TrustRoots {
 // :core:trust check and of :android:platform preBuild) fails the build when the asset differs.
 object PinnedLauncher {
     const val ASSET_NAME = "cleanyourtv-launcher.apk"
-    const val UPSTREAM_COMMIT = "3e34f40f42728284bbb3d4d7bea57c3f504c3b31"
+    const val UPSTREAM_COMMIT = "6afe792cb5951c828651d41ab458c007d04dd9fc"
     const val PACKAGE = "com.gathin.tvhome"
-    const val VERSION_CODE = 8L
-    const val VERSION_NAME = "2.7"
-    const val SIZE = 491_007L
-    const val SHA256 = "43e7633f0dded944a85fff8fd5b947342f90039538922a0b92faf04f086f206f"
-    // SHA-256 of the signing certificate (DER), "O=cleanyourtv, CN=Clean Your TV launcher", v2 and v3.
-    const val SIGNER_SHA256 = "576418154bec6505bfc709ccaa6ae85b6e09d98eb89f4a25147ca1b4b0505132"
+    const val VERSION_CODE = 4L
+    const val VERSION_NAME = "2.3"
+    const val SIZE = 330_194L
+    const val SHA256 = "50ad97accea144f6b6f4fadee2cc4b74ac6d3ebde15a5c860842f759413c3c4b"
+    // SHA-256 of the signing certificate (DER), Android Debug key.
+    const val SIGNER_SHA256 = "0375b4d504271afc0de10ecf139fe3bc093db9d74b59a71bdb029faea7d4eec6"
 }
 
 // The TV curtain bundled in the phone app (RFC-CURTAIN-1): module :tv:curtain of this repo, built

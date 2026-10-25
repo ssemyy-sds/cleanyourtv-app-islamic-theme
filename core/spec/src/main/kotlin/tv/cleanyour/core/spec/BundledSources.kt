@@ -120,6 +120,7 @@ class BundledThemeSource : ThemeSource {
             Triple("default", "Default", "Black, four tiles a row, the dock at the very bottom."),
             Triple("aurora", "Aurora", "A dark aurora picture on navy behind the apps."),
             Triple("six-columns", "Six columns", "Six smaller tiles a row, one row showing under the dock."),
+            Triple("islamik", "Islamik", "Clear TV Islamic: Waktu solat JAKIM di bawah jam, azan, dan paparan masjid."),
         )
 
         val themes: List<Theme> by lazy {

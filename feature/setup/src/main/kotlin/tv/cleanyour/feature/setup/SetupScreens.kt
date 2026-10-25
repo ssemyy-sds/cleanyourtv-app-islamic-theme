@@ -461,6 +461,7 @@ internal fun ThemeContent(extras: SetupExtras, actions: SetupActions) {
 private fun themeDescription(id: String): String? = when (id) {
     "aurora" -> stringResource(R.string.theme_aurora_desc)
     "six-columns" -> stringResource(R.string.theme_six_columns_desc)
+    "islamik" -> stringResource(R.string.theme_islamik_desc)
     else -> null
 }
 

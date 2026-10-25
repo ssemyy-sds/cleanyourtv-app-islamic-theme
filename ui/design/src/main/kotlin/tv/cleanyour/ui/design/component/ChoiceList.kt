@@ -166,6 +166,7 @@ data class ThemeOption(val id: String, val name: String, val description: String
 fun themeSwatch(id: String): List<Color> = when (id) {
     "aurora" -> listOf(Color(0xFF041018), Color(0xFF1FA597), Color(0xFF0B5E57), Color(0xFF1D4FBF))
     "six-columns" -> listOf(Color.Black, Color(0xFFB9C2CC), Color(0xFF3B3B40), Color(0xFF76767D))
+    "islamik" -> listOf(Color(0xFF031A10), Color(0xFF0D5C35), Color(0xFFD4AF37), Color(0xFFE2C974))
     else -> listOf(Color.Black, Color(0xFF5B6CFF), Color(0xFF2A2A2E), Color(0xFF3A86E8))
 }
 

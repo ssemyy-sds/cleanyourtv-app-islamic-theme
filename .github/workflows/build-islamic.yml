@@ -89,12 +89,29 @@ jobs:
           mkdir -p android/platform/src/main/assets/bundled
           cp "$LAUNCHER_APK_PATH" android/platform/src/main/assets/bundled/cleanyourtv-launcher.apk
           
-          # Synchronize PinnedLauncher in core/trust/src/main/kotlin/tv/cleanyour/core/trust/Pins.kt
-          sed -i "s/const val SIZE = .*/const val SIZE = ${LAUNCHER_SIZE}L/" core/trust/src/main/kotlin/tv/cleanyour/core/trust/Pins.kt
-          sed -i "s/const val SHA256 = .*/const val SHA256 = \"${LAUNCHER_SHA256}\"/" core/trust/src/main/kotlin/tv/cleanyour/core/trust/Pins.kt
-          sed -i "s/const val SIGNER_SHA256 = .*/const val SIGNER_SHA256 = \"${LAUNCHER_SIGNER}\"/" core/trust/src/main/kotlin/tv/cleanyour/core/trust/Pins.kt
-          sed -i "s/const val VERSION_CODE = .*/const val VERSION_CODE = 4L/" core/trust/src/main/kotlin/tv/cleanyour/core/trust/Pins.kt
-          sed -i "s/const val VERSION_NAME = .*/const val VERSION_NAME = \"2.3\"/" core/trust/src/main/kotlin/tv/cleanyour/core/trust/Pins.kt
+          # Synchronize PinnedLauncher specifically in core/trust/src/main/kotlin/tv/cleanyour/core/trust/Pins.kt
+          python3 -c '
+          import re, os
+          path = "core/trust/src/main/kotlin/tv/cleanyour/core/trust/Pins.kt"
+          with open(path, "r") as f:
+              text = f.read()
+          size = os.environ["LAUNCHER_SIZE"]
+          sha = os.environ["LAUNCHER_SHA256"]
+          signer = os.environ["LAUNCHER_SIGNER"]
+          def repl(m):
+              b = m.group(1)
+              b = re.sub(r"const val SIZE = .*", f"const val SIZE = {size}L", b)
+              b = re.sub(r"const val SHA256 = .*", f"const val SHA256 = \"{sha}\"", b)
+              b = re.sub(r"const val SIGNER_SHA256 = .*", f"const val SIGNER_SHA256 = \"{signer}\"", b)
+              b = re.sub(r"const val VERSION_CODE = .*", "const val VERSION_CODE = 4L", b)
+              b = re.sub(r"const val VERSION_NAME = .*", "const val VERSION_NAME = \"2.3\"", b)
+              return b
+          text = re.sub(r"(object PinnedLauncher \{[^}]+\})", repl, text)
+          with open(path, "w") as f:
+              f.write(text)
+          '
+          echo "=== Updated Pins.kt ==="
+          git diff core/trust/src/main/kotlin/tv/cleanyour/core/trust/Pins.kt
 
       - name: Switch to JDK 21 (for Companion App)
         uses: actions/setup-java@v4
@@ -109,13 +126,24 @@ jobs:
 
       - name: Build Companion App APK
         run: |
-          ./gradlew :app:assembleFullDebug --console=plain
+          BUILD_TYPE="${{ github.event.inputs.build_type || 'debug' }}"
+          if [ "$BUILD_TYPE" = "release_unsigned" ]; then
+            ./gradlew :app:assembleFullRelease --console=plain
+          else
+            ./gradlew :app:assembleFullDebug --console=plain
+          fi
 
       - name: Collect Artifacts and Generate SHA-256 Checksums
         run: |
           mkdir -p dist/
           cp android/platform/src/main/assets/bundled/cleanyourtv-launcher.apk dist/cleartv-islamic-launcher.apk
-          cp app/build/outputs/apk/full/debug/app-full-debug.apk dist/cleanyourtv-islamic-companion.apk
+          
+          BUILD_TYPE="${{ github.event.inputs.build_type || 'debug' }}"
+          if [ "$BUILD_TYPE" = "release_unsigned" ]; then
+            cp app/build/outputs/apk/full/release/*-unsigned.apk dist/cleanyourtv-islamic-companion.apk || cp app/build/outputs/apk/full/release/*.apk dist/cleanyourtv-islamic-companion.apk
+          else
+            cp app/build/outputs/apk/full/debug/app-full-debug.apk dist/cleanyourtv-islamic-companion.apk
+          fi
           
           cd dist/
           sha256sum cleartv-islamic-launcher.apk > SHA256SUMS.txt
